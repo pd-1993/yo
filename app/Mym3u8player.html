@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HONOR TV HLS Player</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f4f4f4;
+      background-image: url('https://i.imgur.com/0uRLzUW.jpeg');
+      background-size: cover;
+      background-position: center;
+      color: #333;
+    }
+    h2 {
+      background: rgba(255, 255, 255, 0.85);
+      display: inline-block;
+      padding: 10px 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    label {
+      display: block;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    input, button {
+      display: block;
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 10px;
+      width: 100%;
+      max-width: 600px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      background-color: #0066cc;
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+    button:hover {
+      background-color: #004d99;
+    }
+    video {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 640px;
+      height: auto;
+      background: #000;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Honor TV - HLS (.m3u8) Video Player</h2>
+
+  <label for="m3u8Input">Enter HLS Stream URL (.m3u8):</label>
+  <input type="text" id="m3u8Input" placeholder="https://example.com/stream.m3u8" />
+
+  <button onclick="loadStream()">Play Stream</button>
+
+  <video id="video" controls></video>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script>
+    const video = document.getElementById('video');
+
+    function loadStream() {
+      const url = document.getElementById('m3u8Input').value.trim();
+
+      if (!url || !url.includes('.m3u8')) {
+        alert('Please enter a valid .m3u8 URL.');
+        return;
+      }
+
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          video.play();
+        });
+        hls.on(Hls.Events.ERROR, function(event, data) {
+          console.error('HLS.js error:', data);
+          alert('Error loading the stream.');
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('loadedmetadata', () => {
+          video.play();
+        });
+      } else {
+        alert('Your browser does not support HLS playback.');
+      }
+    }
+  </script>
+</body>
+</html>
