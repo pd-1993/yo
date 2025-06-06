@@ -11,20 +11,34 @@
       background-image: url('https://i.imgur.com/0uRLzUW.jpeg');
       background-size: cover;
       background-position: center;
-      color: #333;
+      color: orange;
+      position: relative;
     }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.3); /* Adds contrast to background */
+      z-index: -1;
+    }
+
     h2 {
       background: rgba(255, 255, 255, 0.85);
       display: inline-block;
       padding: 10px 15px;
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      color: orange;
     }
+
     label {
       display: block;
       margin-top: 20px;
       font-weight: bold;
+      color: orange;
     }
+
     input, button {
       display: block;
       padding: 10px;
@@ -33,18 +47,30 @@
       width: 100%;
       max-width: 600px;
       box-sizing: border-box;
-      border: 1px solid #ccc;
       border-radius: 6px;
     }
+
+    input {
+      border: 1px solid #ffb366; /* Soft orange border */
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #ff6600;
+      box-shadow: 0 0 5px rgba(255, 102, 0, 0.6);
+    }
+
     button {
-      background-color: #0066cc;
+      background-color: #ff6600;
       color: white;
       cursor: pointer;
       border: none;
     }
+
     button:hover {
-      background-color: #004d99;
+      background-color: #cc5200;
     }
+
     video {
       margin-top: 20px;
       width: 100%;
@@ -53,27 +79,40 @@
       background: #000;
       border-radius: 8px;
     }
+
+    #statusMessage {
+      color: orange;
+      font-weight: bold;
+      margin-top: 15px;
+    }
   </style>
 </head>
 <body>
-  <h2>Honor TV - HLS (.m3u8) Video Player</h2>
+  <img src="https://i.imgur.com/b2Ytc7X.jpeg" alt="Honor Logo" style="height: 80px; margin-bottom: 20px;">
+
+  <h2>Honor TV - HLS PLAYER (.m3u8)</h2>
 
   <label for="m3u8Input">Enter HLS Stream URL (.m3u8):</label>
   <input type="text" id="m3u8Input" placeholder="https://example.com/stream.m3u8" />
 
   <button onclick="loadStream()">Play Stream</button>
 
+  <p id="statusMessage"></p>
+
   <video id="video" controls></video>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
     const video = document.getElementById('video');
+    const statusMessage = document.getElementById('statusMessage');
 
     function loadStream() {
       const url = document.getElementById('m3u8Input').value.trim();
+      statusMessage.textContent = "Loading stream...";
 
       if (!url || !url.includes('.m3u8')) {
         alert('Please enter a valid .m3u8 URL.');
+        statusMessage.textContent = "";
         return;
       }
 
@@ -82,19 +121,23 @@
         hls.loadSource(url);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          statusMessage.textContent = "";
           video.play();
         });
         hls.on(Hls.Events.ERROR, function(event, data) {
           console.error('HLS.js error:', data);
           alert('Error loading the stream.');
+          statusMessage.textContent = "";
         });
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
         video.addEventListener('loadedmetadata', () => {
+          statusMessage.textContent = "";
           video.play();
         });
       } else {
         alert('Your browser does not support HLS playback.');
+        statusMessage.textContent = "";
       }
     }
   </script>
