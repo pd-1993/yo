@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HONOR TV - IPTV M3U Player</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    body {
+      background-color: #1a1a1a;
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
+
+    h1 {
+      color: #ff7f00;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background-color: #2a2a2a;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(255, 127, 0, 0.3);
+      max-width: 600px;
+      width: 100%;
+    }
+
+    input, button, select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 12px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1em;
+    }
+
+    input, select {
+      background-color: #1e1e1e;
+      color: #fff;
+    }
+
+    button {
+      background-color: #ff7f00;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #e86c00;
+    }
+
+    video {
+      width: 100%;
+      max-width: 800px;
+      margin-top: 20px;
+      border: 3px solid #ff7f00;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(255, 127, 0, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>HONOR TV 🔥 IPTV M3U Player</h1>
+
+  <div class="card">
+    <input type="text" id="m3uUrl" placeholder="Enter M3U Playlist URL" />
+    <button onclick="loadM3U()">Load Playlist</button>
+    <select id="channelList" onchange="playChannel()">
+      <option value="">-- Select Channel --</option>
+    </select>
+  </div>
+
+  <video id="videoPlayer" controls autoplay></video>
+
+  <script>
+    let hls; // Keep global reference for cleanup
+
+    async function loadM3U() {
+      const url = document.getElementById("m3uUrl").value;
+      const select = document.getElementById("channelList");
+      select.innerHTML = '<option value="">Loading...</option>';
+
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const lines = text.split(/\r?\n/);
+        const channels = [];
+
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].startsWith("#EXTINF")) {
+            const titleMatch = lines[i].match(/,(.*)/);
+            const title = titleMatch ? titleMatch[1].trim() : "Unnamed Channel";
+            const streamUrl = lines[i + 1]?.trim();
+            if (streamUrl && streamUrl.startsWith("http")) {
+              channels.push({ title, streamUrl });
+            }
+          }
+        }
+
+        if (channels.length === 0) {
+          select.innerHTML = '<option value="">No channels found</option>';
+          return;
+        }
+
+        select.innerHTML = '<option value="">-- Select Channel --</option>';
+        channels.forEach((ch) => {
+          const opt = document.createElement("option");
+          opt.value = ch.streamUrl;
+          opt.textContent = ch.title;
+          select.appendChild(opt);
+        });
+
+        alert("Playlist loaded! Choose a channel.");
+      } catch (err) {
+        console.error(err);
+        alert("Failed to load playlist. Check the URL and try again.");
+        select.innerHTML = '<option value="">-- Select Channel --</option>';
+      }
+    }
+
+    function playChannel() {
+      const video = document.getElementById("videoPlayer");
+      const streamUrl = document.getElementById("channelList").value;
+
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
+
+      if (Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(streamUrl);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+          video.play();
+        });
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = streamUrl;
+        video.addEventListener("loadedmetadata", () => {
+          video.play();
+        });
+      } else {
+        alert("HLS not supported in this browser.");
+      }
+    }
+  </script>
+
+</body>
+</html>
