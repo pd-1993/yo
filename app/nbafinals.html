@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NBA Finals – Shaka DASH Stream</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.6.0/shaka-player.compiled.min.js"></script>
+  <style>
+    body {
+      background-color: #000;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 5px #000;
+    }
+
+    video {
+      width: 80%;
+      max-width: 960px;
+      border: 2px solid #fff;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>NBA Finals Game 2 – Indiana Pacers vs Oklahoma City Thunder</h1>
+  <p id="NBA">Starting Game Time</p>
+  <video id="video" playsinline controls></video>
+
+  <script>
+    // Install polyfills
+    shaka.polyfill.installAll();
+
+    if (shaka.Player.isBrowserSupported()) {
+      initPlayer();
+    } else {
+      alert("Shaka Player is not supported in this browser.");
+    }
+
+    async function initPlayer() {
+      const video = document.getElementById('video');
+      const player = new shaka.Player(video);
+
+      // Listen for error events.
+      player.addEventListener('error', onErrorEvent);
+
+      const keyId = 'f36eed9e95f140fabbc88a08abbeafff';
+      const key = '0125600d0eb13359c28bdab4a2ebe75a';
+
+      // Set ClearKey decryption
+      const clearKeyConfig = {
+        drm: {
+          clearKeys: {
+            [keyId]: key
+          }
+        }
+      };
+
+      try {
+        await player.configure(clearKeyConfig);
+        await player.load('https://qp-pldt-live-grp-02-prod.akamaized.net/out/u/pl_nba.mpd');
+        console.log('The video has now been loaded.');
+        // Do not call video.play(); let the user manually start playback
+      } catch (error) {
+        onError(error);
+      }
+    }
+
+    function onErrorEvent(event) {
+      onError(event.detail);
+    }
+
+    function onError(error) {
+      console.error('Error code', error.code, 'object', error);
+    }
+    // Reusable countdown function
+    function setupCountdown(id, targetDateStr, label) {
+      const targetDate = new Date(targetDateStr).getTime();
+
+      const x = setInterval(function () {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+
+        if (distance < 0) {
+          clearInterval(x);
+          document.getElementById(id).textContent = `${label} Started`;
+          return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        document.getElementById(id).textContent =
+          `${label} Countdown: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+      }, 1000);
+    }
+
+    setupCountdown("NBA", "June 12, 2025 08:30:00", "NBA");
+  </script>
+</body>
+</html>
