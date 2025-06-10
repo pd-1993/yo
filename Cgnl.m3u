@@ -1,6 +1,11 @@
 #EXTM3U
 
-#EXTINF:-1 tvg-logo="https://example.com/logo.png" group-title="Movies",DRM Channel
+#EXTINF:-1 tvg-logo="https://example.com/logo.png" group-title="Movies",A2Z
 #KODIPROP:inputstream.adaptive.license_key=f703e4c8ec9041eeb5028ab4248fa094:c22f2162e176eee6273a5d0b68d19530
 #KODIPROP:inputstream.adaptive.manifest_type=dash
 https://qp-pldt-live-grp-02-prod.akamaized.net/out/u/cg_a2z.mpd
+
+#EXTINF:-1 tvg-logo="https://example.com/logo.png" group-title="Movies",GMA 7
+#KODIPROP:inputstream.adaptive.license_key=http://143.44.136.74:9443/widevine/?deviceId=02:00:00:00:00:00
+#KODIPROP:inputstream.adaptive.manifest_type=dash
+http://143.44.136.110:6910/001/2/ch00000090990000001093/manifest.mpd?virtualDomain=001.live_hls.zte.com
