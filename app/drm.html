@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SPORTS EVENT</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.5.0/shaka-player.compiled.min.js"></script>
+  <style>
+    body {
+      background-color: #1a1a1a;
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
+    h1 { color: #ff7f00; margin-bottom: 20px; }
+    .card {
+      background-color: #2a2a2a;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(255, 127, 0, 0.3);
+      max-width: 1000px;
+      width: 100%;
+      margin-bottom: 30px;
+    }
+    #categoryList { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+    #categoryList button {
+      padding: 6px 12px;
+      background-color: #2a2a2a;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #categoryList button.active { background-color: #ff7f00; }
+    .channel-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      width: 100%;
+    }
+    .channel-box {
+      background-color: #1e1e1e;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(255, 127, 0, 0.2);
+      transition: transform 0.2s ease;
+    }
+    .channel-box:hover { transform: scale(1.03); }
+    .channel-box img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
+    .channel-box h3 { font-size: 1em; margin: 10px 0; color: #ffffff; }
+    .channel-box button {
+      background-color: #ff7f00;
+      border: none;
+      padding: 8px 12px;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .channel-box button:hover { background-color: #e86c00; }
+    #searchBar {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1em;
+      background-color: #1e1e1e;
+      color: #fff;
+    }
+    #m3uUrl { display: none; }
+    #videoContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+    #videoPlayer {
+      width: 90vw;
+      max-height: 90vh;
+      aspect-ratio: 16/9;
+      border: 3px solid #ff7f00;
+      border-radius: 12px;
+      box-shadow: 0 0 25px rgba(255, 127, 0, 0.5);
+    }
+    #closeBtn {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      background: #ff7f00;
+      color: white;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      z-index: 1000;
+    }
+    #closeBtn:hover { background: #e86c00; }
+  </style>
+</head>
+<body>
+
+<h1>SPORTS EVENT</h1>
+
+<div class="card">
+  <input type="text" id="m3uUrl" value="https://raw.githubusercontent.com/pd-1993/yo/refs/heads/main/Cgnl.m3u" />
+  <input type="text" id="searchBar" placeholder="🔍 Search..." />
+  <div id="categoryList"></div>
+  <div id="channelList" class="channel-grid"></div>
+</div>
+
+<div id="videoContainer">
+  <button id="closeBtn" onclick="closeVideo()">Close</button>
+  <video id="videoPlayer" controls autoplay playsinline></video>
+</div>
+
+<script>
+  let hls;
+  let allChannels = [];
+  let selectedCategory = "All";
+
+  async function loadM3U() {
+    const url = document.getElementById("m3uUrl").value;
+    const listContainer = document.getElementById("channelList");
+    listContainer.innerHTML = '<p style="color:gray">Loading channels...</p>';
+    allChannels = [];
+
+    try {
+      const res = await fetch(url);
+      const text = await res.text();
+      const lines = text.split(/\r?\n/);
+
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith("#EXTINF")) {
+          const titleMatch = lines[i].match(/,(.*)/);
+          const title = titleMatch ? titleMatch[1].trim() : "Unnamed Channel";
+          const logoMatch = lines[i].match(/tvg-logo="(.*?)"/);
+          const logo = logoMatch ? logoMatch[1] : "";
+          const groupMatch = lines[i].match(/group-title="(.*?)"/);
+          const group = groupMatch ? groupMatch[1] : "Uncategorized";
+
+          let licenseKey = "";
+          let isDash = false;
+          let streamUrl = "";
+
+          for (let j = i + 1; j < lines.length; j++) {
+            if (lines[j].startsWith("#KODIPROP")) {
+              if (lines[j].includes("license_key=")) {
+                licenseKey = lines[j].split("license_key=")[1].trim();
+              }
+              if (lines[j].includes("manifest_type=dash")) {
+                isDash = true;
+              }
+            } else if (lines[j].startsWith("http")) {
+              streamUrl = lines[j].trim();
+              break;
+            }
+          }
+
+          if (streamUrl) {
+            allChannels.push({ title, streamUrl, logo, group, isDash, licenseKey });
+          }
+        }
+      }
+
+      if (allChannels.length === 0) {
+        listContainer.innerHTML = '<p>No channels found</p>';
+        return;
+      }
+
+      renderCategories();
+      filterAndRender();
+    } catch (err) {
+      console.error(err);
+      listContainer.innerHTML = '<p style="color:red;">Failed to load playlist.</p>';
+    }
+  }
+
+  function renderCategories() {
+    const categories = ["All", ...new Set(allChannels.map(ch => ch.group))];
+    const container = document.getElementById("categoryList");
+    container.innerHTML = "";
+
+    categories.forEach(cat => {
+      const btn = document.createElement("button");
+      btn.textContent = cat;
+      btn.className = selectedCategory === cat ? "active" : "";
+      btn.onclick = () => {
+        selectedCategory = cat;
+        renderCategories();
+        filterAndRender();
+      };
+      if (selectedCategory === cat) btn.classList.add("active");
+      container.appendChild(btn);
+    });
+  }
+
+  function filterAndRender() {
+    const query = document.getElementById("searchBar").value.toLowerCase();
+    const filtered = allChannels.filter(ch => {
+      const matchCategory = selectedCategory === "All" || ch.group === selectedCategory;
+      const matchSearch = ch.title.toLowerCase().includes(query);
+      return matchCategory && matchSearch;
+    });
+    renderChannels(filtered);
+  }
+
+  function renderChannels(channels) {
+    const listContainer = document.getElementById("channelList");
+    listContainer.innerHTML = "";
+
+    channels.forEach((ch) => {
+      const box = document.createElement("div");
+      box.className = "channel-box";
+
+      if (ch.logo) {
+        const img = document.createElement("img");
+        img.src = ch.logo;
+        img.alt = ch.title;
+        box.appendChild(img);
+      }
+
+      const title = document.createElement("h3");
+      title.textContent = ch.title;
+      box.appendChild(title);
+
+      const btn = document.createElement("button");
+      btn.textContent = "Play";
+      btn.onclick = () => playChannel(ch);
+      box.appendChild(btn);
+
+      listContainer.appendChild(box);
+    });
+  }
+
+  async function playChannel(channel) {
+    const video = document.getElementById("videoPlayer");
+    const videoContainer = document.getElementById("videoContainer");
+    videoContainer.style.display = "flex";
+
+    if (hls) {
+      hls.destroy();
+      hls = null;
+    }
+
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+
+    if (channel.isDash && channel.licenseKey) {
+      await loadShaka(channel.streamUrl, channel.licenseKey);
+      return;
+    }
+
+    if (channel.streamUrl.endsWith(".mp4")) {
+      video.src = channel.streamUrl;
+      video.load();
+      video.play();
+      return;
+    }
+
+    if (Hls.isSupported()) {
+      hls = new Hls();
+      hls.loadSource(channel.streamUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = channel.streamUrl;
+      video.addEventListener("loadedmetadata", () => video.play());
+    } else {
+      alert("Unsupported format.");
+    }
+  }
+
+  async function loadShaka(url, licenseKeyUrl) {
+    const video = document.getElementById("videoPlayer");
+
+    if (!shaka.Player.isBrowserSupported()) {
+      alert("Shaka Player is not supported.");
+      return;
+    }
+
+    const player = new shaka.Player(video);
+    player.addEventListener("error", e => console.error("Shaka error", e));
+
+    // Example: Replace this with your actual license key handling logic
+    const clearkey = {
+      "keys": {
+        "1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p": "AbCdEfGhIjKlMnOpQrStUvWxYz123456"
+      }
+    };
+
+    player.configure({
+      drm: {
+        clearKeys: clearkey.keys
+      }
+    });
+
+    try {
+      await player.load(url);
+      console.log("Shaka loaded:", url);
+    } catch (err) {
+      console.error("Shaka load failed:", err);
+    }
+  }
+
+  function closeVideo() {
+    const video = document.getElementById("videoPlayer");
+    const videoContainer = document.getElementById("videoContainer");
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+    videoContainer.style.display = "none";
+  }
+
+  document.getElementById("searchBar").addEventListener("input", filterAndRender);
+
+  window.onload = function () {
+    loadM3U();
+  };
+</script>
+
+</body>
+</html>
