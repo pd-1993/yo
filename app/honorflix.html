@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>HONOR FLIX</title>
+  <title>HOTFLIX IPTV</title>
   <style>
     :root {
       --primary: #00aaff;
@@ -175,11 +175,11 @@
 </head>
 <body>
 
-  <h1>HONOR FLIX</h1>
+  <h1>HOTFLIX IPTV</h1>
 
   <div id="menuCard" class="card">
     <input type="hidden" id="m3uUrl" value="https://opop.pro/H18QPYxttR91" />
-    <input type="text" id="searchBar" placeholder="🔍 Search Movies..." />
+    <input type="text" id="searchBar" placeholder="🔍 Search channels..." />
     <div id="channelList" class="channel-grid"></div>
   </div>
 
@@ -194,7 +194,7 @@
     async function loadM3U() {
       const url = document.getElementById("m3uUrl").value;
       const listContainer = document.getElementById("channelList");
-      listContainer.innerHTML = '<p style="color:gray;">Loading Movies...</p>';
+      listContainer.innerHTML = '<p style="color:gray;">Loading channels...</p>';
 
       try {
         const res = await fetch(url);
