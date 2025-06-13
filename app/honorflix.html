@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>HOTFLIX IPTV</title>
+  <title>TAGALOG COLLECTION</title>
   <style>
     :root {
       --primary: #00aaff;
@@ -54,6 +54,27 @@
       margin-bottom: 2vh;
       background-color: var(--channel-bg);
       color: var(--fg);
+    }
+
+    #categoryList {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .category-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .category-btn.active {
+      background: #0077aa;
     }
 
     .channel-grid {
@@ -171,15 +192,41 @@
         font-size: 1rem;
       }
     }
+
+    @media (max-width: 480px) {
+      .channel-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+      }
+
+      .channel-box {
+        padding: 0.5rem;
+      }
+
+      .channel-box img {
+        width: 60px;
+        height: 60px;
+      }
+
+      .channel-box p {
+        font-size: 0.8rem;
+      }
+
+      .channel-box button {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <h1>HOTFLIX IPTV</h1>
+  <h1>HTDFLIX</h1>
 
   <div id="menuCard" class="card">
     <input type="hidden" id="m3uUrl" value="https://m3u.work/p3QXjXsY" />
     <input type="text" id="searchBar" placeholder="🔍 Search channels..." />
+    <div id="categoryList"></div>
     <div id="channelList" class="channel-grid"></div>
   </div>
 
@@ -190,6 +237,7 @@
 
   <script>
     let allChannels = [];
+    let activeCategory = null;
 
     async function loadM3U() {
       const url = document.getElementById("m3uUrl").value;
@@ -206,16 +254,21 @@
           if (lines[i].startsWith("#EXTINF")) {
             const titleMatch = lines[i].match(/,(.*)/);
             const logoMatch = lines[i].match(/tvg-logo="(.*?)"/);
+            const groupMatch = lines[i].match(/group-title="(.*?)"/);
+
             const title = titleMatch ? titleMatch[1].trim() : "Untitled";
             const logo = logoMatch ? logoMatch[1] : "";
+            const group = groupMatch ? groupMatch[1].trim() : "Other";
             const streamUrl = lines[i + 1]?.trim();
 
             if (streamUrl && streamUrl.startsWith("http")) {
-              allChannels.push({ title, logo, streamUrl });
+              allChannels.push({ title, logo, streamUrl, group });
             }
           }
         }
 
+        const uniqueGroups = [...new Set(allChannels.map(ch => ch.group))];
+        renderCategories(uniqueGroups);
         renderChannels(allChannels);
       } catch (error) {
         console.error("Error loading M3U:", error);
@@ -248,6 +301,41 @@
 
         container.appendChild(box);
       });
+    }
+
+    function renderCategories(groups) {
+      const catContainer = document.getElementById("categoryList");
+      catContainer.innerHTML = "";
+
+      const allBtn = document.createElement("button");
+      allBtn.textContent = "All";
+      allBtn.className = "category-btn";
+      if (!activeCategory) allBtn.classList.add("active");
+      allBtn.onclick = () => {
+        activeCategory = null;
+        setActiveCategory(allBtn);
+        renderChannels(allChannels);
+      };
+      catContainer.appendChild(allBtn);
+
+      groups.forEach(group => {
+        const btn = document.createElement("button");
+        btn.textContent = group;
+        btn.className = "category-btn";
+        btn.onclick = () => {
+          activeCategory = group;
+          setActiveCategory(btn);
+          const filtered = allChannels.filter(ch => ch.group === group);
+          renderChannels(filtered);
+        };
+        catContainer.appendChild(btn);
+      });
+    }
+
+    function setActiveCategory(activeBtn) {
+      const buttons = document.querySelectorAll(".category-btn");
+      buttons.forEach(btn => btn.classList.remove("active"));
+      activeBtn.classList.add("active");
     }
 
     function playChannel(url) {
@@ -288,7 +376,8 @@
 
     document.getElementById("searchBar").addEventListener("input", function () {
       const query = this.value.toLowerCase();
-      const filtered = allChannels.filter(ch => ch.title.toLowerCase().includes(query));
+      const filtered = (activeCategory ? allChannels.filter(ch => ch.group === activeCategory) : allChannels)
+        .filter(ch => ch.title.toLowerCase().includes(query));
       renderChannels(filtered);
     });
 
