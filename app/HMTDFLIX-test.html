@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -55,7 +56,6 @@
     .section h2 {
       font-size: 1.6rem;
       margin: 0 0 0.5rem 0.5rem;
-      text-transform: capitalize;
     }
 
     .horizontal-scroll {
@@ -75,20 +75,17 @@
       overflow: hidden;
       color: white;
       text-align: center;
-      cursor: pointer;
     }
 
     .card-item img {
       width: 100%;
       height: 225px;
       object-fit: cover;
-      display: block;
     }
 
     .card-item p {
       margin: 0.3rem 0;
       font-size: 0.9rem;
-      padding: 0 0.2rem;
     }
 
     #videoContainer {
@@ -154,7 +151,7 @@
 
   <!-- Logo and Title -->
   <div class="header">
-    <h1>HTDFLIX</h1>
+    <h1>HMTDFLIX</h1>
   </div>
 
   <input type="hidden" id="m3uUrl" value="https://opop.pro/WJZCnzS4PZNUM" />
@@ -217,40 +214,37 @@
       const container = document.getElementById("channelSections");
       container.innerHTML = "";
 
-      Object.entries(grouped)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .forEach(([groupName, channels]) => {
-          const section = document.createElement("div");
-          section.className = "section";
+      Object.entries(grouped).forEach(([groupName, channels]) => {
+        const section = document.createElement("div");
+        section.className = "section";
 
-          const title = document.createElement("h2");
-          title.textContent = groupName;
-          section.appendChild(title);
+        const title = document.createElement("h2");
+        title.textContent = groupName;
+        section.appendChild(title);
 
-          const scroll = document.createElement("div");
-          scroll.className = "horizontal-scroll";
+        const scroll = document.createElement("div");
+        scroll.className = "horizontal-scroll";
 
-          channels.forEach(ch => {
-            const card = document.createElement("div");
-            card.className = "card-item";
+        channels.forEach(ch => {
+          const card = document.createElement("div");
+          card.className = "card-item";
 
-            const img = document.createElement("img");
-            img.src = ch.logo || "https://via.placeholder.com/150x225?text=No+Image";
-            img.alt = ch.title;
-            img.loading = "lazy";
-            card.appendChild(img);
+          const img = document.createElement("img");
+          img.src = ch.logo || "https://via.placeholder.com/150x225?text=No+Image";
+          img.alt = ch.title;
+          card.appendChild(img);
 
-            const titleP = document.createElement("p");
-            titleP.textContent = ch.title;
-            card.appendChild(titleP);
+          const titleP = document.createElement("p");
+          titleP.textContent = ch.title;
+          card.appendChild(titleP);
 
-            card.onclick = () => playChannel(ch.streamUrl);
-            scroll.appendChild(card);
-          });
-
-          section.appendChild(scroll);
-          container.appendChild(section);
+          card.onclick = () => playChannel(ch.streamUrl);
+          scroll.appendChild(card);
         });
+
+        section.appendChild(scroll);
+        container.appendChild(section);
+      });
     }
 
     function playChannel(url) {
