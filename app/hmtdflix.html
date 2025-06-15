@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,9 +6,10 @@
   <style>
     :root {
       --primary: #00aaff;
-      --bg: #e6f4ff;
-      --fg: #003366;
-      --card-bg: #ffffff;
+      --bg: #0a0f1e;
+      --fg: #e6f4ff;
+      --card-bg: #16213e;
+      --hover-bg: #1e2a4f;
     }
 
     html, body {
@@ -29,11 +29,6 @@
       margin-bottom: 1rem;
     }
 
-    .header img {
-      height: 80px;
-      margin-bottom: 0.5rem;
-    }
-
     h1 {
       font-size: 3rem;
       color: var(--primary);
@@ -44,6 +39,8 @@
       width: 100%;
       padding: 1rem;
       font-size: 1.2rem;
+      background: var(--card-bg);
+      color: var(--fg);
       border: 2px solid var(--primary);
       border-radius: 0.5rem;
       margin-bottom: 2rem;
@@ -56,6 +53,7 @@
     .section h2 {
       font-size: 1.6rem;
       margin: 0 0 0.5rem 0.5rem;
+      color: var(--primary);
     }
 
     .horizontal-scroll {
@@ -70,11 +68,17 @@
       flex: 0 0 auto;
       width: 150px;
       scroll-snap-align: start;
-      background: #111;
+      background: var(--card-bg);
       border-radius: 0.5rem;
       overflow: hidden;
-      color: white;
+      color: var(--fg);
       text-align: center;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    .card-item:hover {
+      background: var(--hover-bg);
+      transform: scale(1.05);
     }
 
     .card-item img {
@@ -94,7 +98,7 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 51, 0.9);
+      background: rgba(0, 0, 51, 0.95);
       display: none;
       justify-content: center;
       align-items: center;
@@ -137,10 +141,6 @@
         height: 180px;
       }
 
-      .header img {
-        height: 60px;
-      }
-
       h1 {
         font-size: 2.2rem;
       }
@@ -149,7 +149,6 @@
 </head>
 <body>
 
-  <!-- Logo and Title -->
   <div class="header">
     <h1>HMTDFLIX</h1>
   </div>
