@@ -2,14 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>TAGALOG COLLECTION</title>
+  <title>HTDFLIX</title>
   <style>
     :root {
       --primary: #00aaff;
       --bg: #e6f4ff;
       --fg: #003366;
       --card-bg: #ffffff;
-      --channel-bg: #f0faff;
     }
 
     html, body {
@@ -18,31 +17,17 @@
       font-family: 'Segoe UI', Tahoma, sans-serif;
       background-color: var(--bg);
       color: var(--fg);
-      font-size: 1.2rem;
     }
 
     body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       padding: 2vh 2vw;
-      min-height: 100vh;
     }
 
     h1 {
       font-size: 3rem;
       color: var(--primary);
-      margin-bottom: 2vh;
       text-align: center;
-    }
-
-    .card {
-      background-color: var(--card-bg);
-      padding: 2rem;
-      border-radius: 1rem;
-      box-shadow: 0 0 25px rgba(0, 170, 255, 0.2);
-      width: 100%;
-      max-width: 1200px;
+      margin-bottom: 1rem;
     }
 
     #searchBar {
@@ -51,75 +36,46 @@
       font-size: 1.2rem;
       border: 2px solid var(--primary);
       border-radius: 0.5rem;
-      margin-bottom: 2vh;
-      background-color: var(--channel-bg);
-      color: var(--fg);
+      margin-bottom: 2rem;
     }
 
-    #categoryList {
+    .section {
+      margin-bottom: 3rem;
+    }
+
+    .section h2 {
+      font-size: 1.6rem;
+      margin: 0 0 0.5rem 0.5rem;
+    }
+
+    .horizontal-scroll {
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .category-btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-
-    .category-btn.active {
-      background: #0077aa;
-    }
-
-    .channel-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .channel-box {
-      background: var(--channel-bg);
-      border-radius: 1rem;
+      overflow-x: auto;
       padding: 1rem;
-      text-align: center;
-      border: 2px solid var(--primary);
-      transition: transform 0.3s ease;
+      gap: 1rem;
+      scroll-snap-type: x mandatory;
     }
 
-    .channel-box:hover {
-      transform: scale(1.05);
-    }
-
-    .channel-box img {
-      width: 100px;
-      height: 100px;
-      object-fit: contain;
-      margin-bottom: 1rem;
-    }
-
-    .channel-box p {
-      font-size: 1.2rem;
-      margin: 0.5rem 0;
-    }
-
-    .channel-box button {
-      background-color: var(--primary);
-      border: none;
-      padding: 0.8rem 1.2rem;
-      font-size: 1rem;
-      color: white;
+    .card-item {
+      flex: 0 0 auto;
+      width: 150px;
+      scroll-snap-align: start;
+      background: #111;
       border-radius: 0.5rem;
-      cursor: pointer;
+      overflow: hidden;
+      color: white;
+      text-align: center;
     }
 
-    .channel-box button:hover {
-      background-color: #0077aa;
+    .card-item img {
+      width: 100%;
+      height: 225px;
+      object-fit: cover;
+    }
+
+    .card-item p {
+      margin: 0.3rem 0;
+      font-size: 0.9rem;
     }
 
     #videoContainer {
@@ -162,73 +118,23 @@
       background: #0077aa;
     }
 
-    #m3uUrl {
-      display: none;
-    }
-
-    @media (max-width: 768px) {
-      h1 {
-        font-size: 2rem;
-      }
-
-      #searchBar {
-        font-size: 1rem;
-      }
-
-      .channel-box {
-        padding: 1rem;
-      }
-
-      .channel-box img {
-        width: 80px;
-        height: 80px;
-      }
-
-      .channel-box p {
-        font-size: 1rem;
-      }
-
-      .channel-box button {
-        font-size: 1rem;
-      }
-    }
-
     @media (max-width: 480px) {
-      .channel-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 0.5rem;
+      .card-item {
+        width: 120px;
       }
 
-      .channel-box {
-        padding: 0.5rem;
-      }
-
-      .channel-box img {
-        width: 60px;
-        height: 60px;
-      }
-
-      .channel-box p {
-        font-size: 0.8rem;
-      }
-
-      .channel-box button {
-        font-size: 0.8rem;
-        padding: 0.4rem 0.8rem;
+      .card-item img {
+        height: 180px;
       }
     }
   </style>
 </head>
 <body>
-
   <h1>HTDFLIX</h1>
+  <input type="hidden" id="m3uUrl" value="https://m3u.work/p3QXjXsY" />
+  <input type="text" id="searchBar" placeholder="🔍 Search channels..." />
 
-  <div id="menuCard" class="card">
-    <input type="hidden" id="m3uUrl" value="https://m3u.work/p3QXjXsY" />
-    <input type="text" id="searchBar" placeholder="🔍 Search channels..." />
-    <div id="categoryList"></div>
-    <div id="channelList" class="channel-grid"></div>
-  </div>
+  <div id="channelSections"></div>
 
   <div id="videoContainer">
     <button id="closeBtn" onclick="closeVideo()">✖ Close</button>
@@ -237,19 +143,16 @@
 
   <script>
     let allChannels = [];
-    let activeCategory = null;
+    let filteredChannels = [];
 
     async function loadM3U() {
       const url = document.getElementById("m3uUrl").value;
-      const listContainer = document.getElementById("channelList");
-      listContainer.innerHTML = '<p style="color:gray;">Loading channels...</p>';
-
       try {
         const res = await fetch(url);
         const text = await res.text();
         const lines = text.split(/\r?\n/);
-
         allChannels = [];
+
         for (let i = 0; i < lines.length; i++) {
           if (lines[i].startsWith("#EXTINF")) {
             const titleMatch = lines[i].match(/,(.*)/);
@@ -267,123 +170,93 @@
           }
         }
 
-        const uniqueGroups = [...new Set(allChannels.map(ch => ch.group))];
-        renderCategories(uniqueGroups);
-        renderChannels(allChannels);
-      } catch (error) {
-        console.error("Error loading M3U:", error);
-        listContainer.innerHTML = "<p style='color:red;'>Failed to load playlist.</p>";
+        filteredChannels = allChannels;
+        renderSections(groupChannels(filteredChannels));
+      } catch (err) {
+        document.getElementById("channelSections").innerHTML = "<p style='color:red;'>Failed to load playlist.</p>";
+        console.error("M3U load error:", err);
       }
     }
 
-    function renderChannels(channels) {
-      const container = document.getElementById("channelList");
+    function groupChannels(channels) {
+      const grouped = {};
+      channels.forEach(ch => {
+        if (!grouped[ch.group]) grouped[ch.group] = [];
+        grouped[ch.group].push(ch);
+      });
+      return grouped;
+    }
+
+    function renderSections(grouped) {
+      const container = document.getElementById("channelSections");
       container.innerHTML = "";
 
-      channels.forEach((ch) => {
-        const box = document.createElement("div");
-        box.className = "channel-box";
+      Object.entries(grouped).forEach(([groupName, channels]) => {
+        const section = document.createElement("div");
+        section.className = "section";
 
-        if (ch.logo) {
+        const title = document.createElement("h2");
+        title.textContent = groupName;
+        section.appendChild(title);
+
+        const scroll = document.createElement("div");
+        scroll.className = "horizontal-scroll";
+
+        channels.forEach(ch => {
+          const card = document.createElement("div");
+          card.className = "card-item";
+
           const img = document.createElement("img");
-          img.src = ch.logo;
-          box.appendChild(img);
-        }
+          img.src = ch.logo || "https://via.placeholder.com/150x225?text=No+Image";
+          img.alt = ch.title;
+          card.appendChild(img);
 
-        const title = document.createElement("p");
-        title.textContent = ch.title;
-        box.appendChild(title);
+          const titleP = document.createElement("p");
+          titleP.textContent = ch.title;
+          card.appendChild(titleP);
 
-        const btn = document.createElement("button");
-        btn.textContent = "▶ Play";
-        btn.onclick = () => playChannel(ch.streamUrl);
-        box.appendChild(btn);
+          card.onclick = () => playChannel(ch.streamUrl);
+          scroll.appendChild(card);
+        });
 
-        container.appendChild(box);
+        section.appendChild(scroll);
+        container.appendChild(section);
       });
-    }
-
-    function renderCategories(groups) {
-      const catContainer = document.getElementById("categoryList");
-      catContainer.innerHTML = "";
-
-      const allBtn = document.createElement("button");
-      allBtn.textContent = "All";
-      allBtn.className = "category-btn";
-      if (!activeCategory) allBtn.classList.add("active");
-      allBtn.onclick = () => {
-        activeCategory = null;
-        setActiveCategory(allBtn);
-        renderChannels(allChannels);
-      };
-      catContainer.appendChild(allBtn);
-
-      groups.forEach(group => {
-        const btn = document.createElement("button");
-        btn.textContent = group;
-        btn.className = "category-btn";
-        btn.onclick = () => {
-          activeCategory = group;
-          setActiveCategory(btn);
-          const filtered = allChannels.filter(ch => ch.group === group);
-          renderChannels(filtered);
-        };
-        catContainer.appendChild(btn);
-      });
-    }
-
-    function setActiveCategory(activeBtn) {
-      const buttons = document.querySelectorAll(".category-btn");
-      buttons.forEach(btn => btn.classList.remove("active"));
-      activeBtn.classList.add("active");
     }
 
     function playChannel(url) {
       const container = document.getElementById("videoContainer");
       const video = document.getElementById("videoPlayer");
-      const menu = document.getElementById("menuCard");
 
       video.pause();
       video.innerHTML = "";
 
       const source = document.createElement("source");
       source.src = url;
-      source.type = "video/mp4";
+      source.type = "application/x-mpegURL";
       video.appendChild(source);
 
       container.style.display = "flex";
-      menu.style.display = "none";
-
       video.load();
-      video.play().catch(err => {
-        alert("Could not play the video.");
-        console.error(err);
-      });
+      video.play().catch(console.error);
     }
 
     function closeVideo() {
       const container = document.getElementById("videoContainer");
       const video = document.getElementById("videoPlayer");
-      const menu = document.getElementById("menuCard");
 
       video.pause();
       video.innerHTML = "";
-      video.load();
-
       container.style.display = "none";
-      menu.style.display = "block";
     }
 
     document.getElementById("searchBar").addEventListener("input", function () {
       const query = this.value.toLowerCase();
-      const filtered = (activeCategory ? allChannels.filter(ch => ch.group === activeCategory) : allChannels)
-        .filter(ch => ch.title.toLowerCase().includes(query));
-      renderChannels(filtered);
+      filteredChannels = allChannels.filter(ch => ch.title.toLowerCase().includes(query));
+      renderSections(groupChannels(filteredChannels));
     });
 
-    window.onload = function () {
-      loadM3U();
-    };
+    window.onload = loadM3U;
   </script>
 </body>
 </html>
