@@ -3,71 +3,139 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Home Menu</title>
+  <title>HONOR TV - Home</title>
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f9f9f9;
+      background: #f4f4f4;
     }
 
+    /* NAVIGATION */
     .navbar {
       background-color: #1e1e2f;
-      overflow: hidden;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 20px;
+      padding: 10px 20px;
     }
 
-    .navbar a {
+    .navbar .logo img {
+      height: 40px;
+    }
+
+    .navbar .menu a {
       color: white;
-      padding: 14px 20px;
       text-decoration: none;
+      margin-left: 20px;
       text-transform: uppercase;
       font-weight: bold;
+      font-size: 14px;
     }
 
-    .navbar a:hover {
-      background-color: #333;
+    .navbar .menu a:hover {
+      text-decoration: underline;
     }
 
-    .logo {
-      font-size: 20px;
-      color: #ffffff;
+    /* CATEGORY SECTION */
+    .category-section {
+      padding: 40px 20px;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .category-section h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #333;
+    }
+
+    .categories {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+    }
+
+    .category-box {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+
+    .category-box:hover {
+      transform: scale(1.05);
+    }
+
+    .category-box img {
+      width: 50px;
+      height: 50px;
+      margin-bottom: 10px;
+    }
+
+    .category-box span {
+      display: block;
       font-weight: bold;
-    }
-
-    .menu {
-      display: flex;
-    }
-
-    @media screen and (max-width: 600px) {
-      .menu {
-        flex-direction: column;
-        width: 100%;
-      }
-      .navbar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
+      color: #444;
     }
   </style>
 </head>
 <body>
 
+  <!-- NAVIGATION BAR -->
   <div class="navbar">
-    <div class="logo">HONOR TV</div>
+    <div class="logo">
+      <img src="logo.png" alt="HONOR TV Logo"> <!-- Replace with your actual logo path -->
+    </div>
     <div class="menu">
-      <a href="home.html">Home</a>
-      <a href="hmtdflix.html">Tagalog Collection</a>
-      <a href="International.html">International Movies</a>
+      <a href="index.html">Home</a>
+      <a href="channels.html">Channels</a>
+      <a href="live.html">Live</a>
+      <a href="categories.html">Categories</a>
+      <a href="contact.html">Contact</a>
     </div>
   </div>
 
-  <div style="padding: 20px;">
-    <h1>Enjoy Watching...</h1>
-    <p></p>
+  <!-- CATEGORY SECTION -->
+  <div class="category-section">
+    <h2>Browse by Category</h2>
+    <div class="categories">
+      <div class="category-box">
+        <img src="icons/news.png" alt="News">
+        <span>News</span>
+      </div>
+      <div class="category-box">
+        <img src="icons/sports.png" alt="Sports">
+        <span>Sports</span>
+      </div>
+      <div class="category-box">
+        <img src="icons/movies.png" alt="Movies">
+        <span>Movies</span>
+      </div>
+      <div class="category-box">
+        <img src="icons/kids.png" alt="Kids">
+        <span>Kids</span>
+      </div>
+      <div class="category-box">
+        <img src="icons/music.png" alt="Music">
+        <span>Music</span>
+      </div>
+      <div class="category-box">
+        <img src="icons/religion.png" alt="Religion">
+        <span>Religion</span>
+      </div>
+      <div class="category-box">
+        <img src="icons/documentary.png" alt="Documentary">
+        <span>Documentary</span>
+      </div>
+      <div class="category-box">
+        <img src="icons/education.png" alt="Education">
+        <span>Education</span>
+      </div>
+    </div>
   </div>
 
 </body>
