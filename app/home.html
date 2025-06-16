@@ -28,6 +28,7 @@
     header h1 {
       font-size: 24px;
       margin: 0;
+      color: #00aaff; /* Blue title */
     }
 
     .container {
@@ -46,7 +47,7 @@
       text-align: center;
       transition: transform 0.2s, background-color 0.2s;
       outline: none;
-      aspect-ratio: 1 / 1;
+      aspect-ratio: 1 / 1; /* Square */
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -73,12 +74,14 @@
     .category h2 {
       font-size: 18px;
       margin: 0;
-      color: #00aaff; /* Changed to blue */
+      color: #00aaff; /* Blue category text */
     }
 
+    /* Hide scrollbar for TV feel */
     .container::-webkit-scrollbar {
       display: none;
     }
+
     .container {
       -ms-overflow-style: none;
       scrollbar-width: none;
