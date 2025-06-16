@@ -153,8 +153,8 @@
     }
   </style>
 
-  <!-- FastPlayer JS -->
-  <script src="https://cdn.jsdelivr.net/npm/fastplayer.js/dist/fastplayer.min.js"></script>
+  <!-- HLS.js for TV HLS support -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 <body>
 
@@ -168,7 +168,7 @@
   <div id="channelSections"></div>
 
   <div id="videoContainer">
-    <button id="closeBtn" onclick="closeVideo()">Close</button>
+    <button id="closeBtn" onclick="closeVideo()"> Close</button>
     <video id="videoPlayer" controls autoplay playsinline></video>
   </div>
 
@@ -270,17 +270,21 @@
       video.innerHTML = "";
       container.style.display = "flex";
 
-      if (window.fpInstance) {
-        window.fpInstance.destroy();
-        window.fpInstance = null;
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+          video.play().catch(console.error);
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('loadedmetadata', () => {
+          video.play().catch(console.error);
+        });
+      } else {
+        alert("This device does not support HLS playback.");
       }
-
-      window.fpInstance = new FastPlayer(video, {
-        src: url,
-        autoplay: true,
-        controls: true,
-        preload: 'auto'
-      });
     }
 
     function closeVideo() {
@@ -290,11 +294,6 @@
       video.pause();
       video.innerHTML = "";
       container.style.display = "none";
-
-      if (window.fpInstance) {
-        window.fpInstance.destroy();
-        window.fpInstance = null;
-      }
     }
 
     document.getElementById("searchBar").addEventListener("input", function () {
