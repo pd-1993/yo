@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>HTDFLIX</title>
+  <title>HMTDFLIX</title>
   <style>
     :root {
       --primary: #00aaff;
-      --bg: #e6f4ff;
-      --fg: #003366;
-      --card-bg: #ffffff;
+      --bg: #0a0f1e;
+      --fg: #e6f4ff;
+      --card-bg: #16213e;
+      --hover-bg: #1e2a4f;
     }
 
     html, body {
@@ -28,11 +29,6 @@
       margin-bottom: 1rem;
     }
 
-    .header img {
-      height: 80px;
-      margin-bottom: 0.5rem;
-    }
-
     h1 {
       font-size: 3rem;
       color: var(--primary);
@@ -43,6 +39,8 @@
       width: 100%;
       padding: 1rem;
       font-size: 1.2rem;
+      background: var(--card-bg);
+      color: var(--fg);
       border: 2px solid var(--primary);
       border-radius: 0.5rem;
       margin-bottom: 2rem;
@@ -55,6 +53,7 @@
     .section h2 {
       font-size: 1.6rem;
       margin: 0 0 0.5rem 0.5rem;
+      color: var(--primary);
     }
 
     .horizontal-scroll {
@@ -69,11 +68,23 @@
       flex: 0 0 auto;
       width: 150px;
       scroll-snap-align: start;
-      background: #111;
+      background: var(--card-bg);
       border-radius: 0.5rem;
       overflow: hidden;
-      color: white;
+      color: var(--fg);
       text-align: center;
+      transition: background 0.3s, transform 0.2s;
+      cursor: pointer;
+    }
+
+    .card-item:hover {
+      background: var(--hover-bg);
+      transform: scale(1.05);
+    }
+
+    .card-item:focus {
+      outline: 3px solid var(--primary);
+      transform: scale(1.1);
     }
 
     .card-item img {
@@ -93,7 +104,7 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 51, 0.9);
+      background: rgba(0, 0, 51, 0.95);
       display: none;
       justify-content: center;
       align-items: center;
@@ -136,30 +147,28 @@
         height: 180px;
       }
 
-      .header img {
-        height: 60px;
-      }
-
       h1 {
         font-size: 2.2rem;
       }
     }
   </style>
+
+  <!-- HLS.js for TV HLS support -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 <body>
 
-  <!-- Logo and Title -->
   <div class="header">
-    <h1>HTDFLIX</h1>
+    <h1>HMTDFLIX</h1>
   </div>
 
-  <input type="hidden" id="m3uUrl" value="https://opop.pro/WJZCnzS4PZNUM" />
-  <input type="text" id="searchBar" placeholder="🔍 Search channels..." />
+  <input type="hidden" id="m3uUrl" value="https://m3u.work/HSAtQg" />
+  <input type="text" id="searchBar" placeholder="Search..." />
 
   <div id="channelSections"></div>
 
   <div id="videoContainer">
-    <button id="closeBtn" onclick="closeVideo()">✖ Close</button>
+    <button id="closeBtn" onclick="closeVideo()"> Close</button>
     <video id="videoPlayer" controls autoplay playsinline></video>
   </div>
 
@@ -227,6 +236,8 @@
         channels.forEach(ch => {
           const card = document.createElement("div");
           card.className = "card-item";
+          card.setAttribute("tabindex", "0");
+          card.setAttribute("data-url", ch.streamUrl);
 
           const img = document.createElement("img");
           img.src = ch.logo || "https://via.placeholder.com/150x225?text=No+Image";
@@ -244,6 +255,11 @@
         section.appendChild(scroll);
         container.appendChild(section);
       });
+
+      setTimeout(() => {
+        const firstCard = document.querySelector(".card-item");
+        if (firstCard) firstCard.focus();
+      }, 300);
     }
 
     function playChannel(url) {
@@ -252,15 +268,23 @@
 
       video.pause();
       video.innerHTML = "";
-
-      const source = document.createElement("source");
-      source.src = url;
-      source.type = "application/x-mpegURL";
-      video.appendChild(source);
-
       container.style.display = "flex";
-      video.load();
-      video.play().catch(console.error);
+
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+          video.play().catch(console.error);
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('loadedmetadata', () => {
+          video.play().catch(console.error);
+        });
+      } else {
+        alert("This device does not support HLS playback.");
+      }
     }
 
     function closeVideo() {
@@ -277,6 +301,54 @@
       filteredChannels = allChannels.filter(ch => ch.title.toLowerCase().includes(query));
       renderSections(groupChannels(filteredChannels));
     });
+
+    // Arrow key navigation
+    document.addEventListener('keydown', (e) => {
+      const focused = document.activeElement;
+      const cards = Array.from(document.querySelectorAll('.card-item'));
+
+      if (!cards.length) return;
+
+      let index = cards.indexOf(focused);
+
+      switch (e.key) {
+        case 'ArrowRight':
+          if (index >= 0 && index < cards.length - 1) cards[index + 1].focus();
+          break;
+        case 'ArrowLeft':
+          if (index > 0) cards[index - 1].focus();
+          break;
+        case 'ArrowDown':
+          moveToSection(cards, index, 1);
+          break;
+        case 'ArrowUp':
+          moveToSection(cards, index, -1);
+          break;
+        case 'Enter':
+          if (focused && focused.dataset.url) playChannel(focused.dataset.url);
+          break;
+      }
+    });
+
+    function moveToSection(cards, index, direction) {
+      const currentCard = cards[index];
+      if (!currentCard) return;
+
+      const currentSection = currentCard.closest('.section');
+      const allSections = Array.from(document.querySelectorAll('.section'));
+      const currentIndex = allSections.indexOf(currentSection);
+      const targetSection = allSections[currentIndex + direction];
+
+      if (targetSection) {
+        const targetCard = targetSection.querySelector('.card-item');
+        if (targetCard) targetCard.focus();
+      }
+    }
+
+    // Optional: Hide search on TVs (detect by userAgent)
+    if (navigator.userAgent.includes("TV")) {
+      document.getElementById("searchBar").style.display = "none";
+    }
 
     window.onload = loadM3U;
   </script>
