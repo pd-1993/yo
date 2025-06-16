@@ -162,7 +162,7 @@
     <h1>HMTDFLIX</h1>
   </div>
 
-  <input type="hidden" id="m3uUrl" value="https://m3u.work/HSAtQg" />
+  <input type="hidden" id="m3uUrl" value="https://opop.pro/WJZCnzS4PZNUM" />
   <input type="text" id="searchBar" placeholder="Search..." />
 
   <div id="channelSections"></div>
@@ -270,20 +270,35 @@
       video.innerHTML = "";
       container.style.display = "flex";
 
-      if (Hls.isSupported()) {
-        const hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, function () {
-          video.play().catch(console.error);
-        });
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      const isHLS = url.endsWith(".m3u8");
+      const isMP4 = url.endsWith(".mp4");
+
+      if (isHLS) {
+        if (Hls.isSupported()) {
+          const hls = new Hls();
+          hls.loadSource(url);
+          hls.attachMedia(video);
+          hls.on(Hls.Events.MANIFEST_PARSED, function () {
+            video.play().catch(console.error);
+          });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = url;
+          video.addEventListener('loadedmetadata', () => {
+            video.play().catch(console.error);
+          });
+        } else {
+          alert("This device does not support HLS playback.");
+        }
+      } else if (isMP4) {
         video.src = url;
-        video.addEventListener('loadedmetadata', () => {
-          video.play().catch(console.error);
-        });
+        video.load();
+        video.play().catch(console.error);
       } else {
-        alert("This device does not support HLS playback.");
+        video.src = url;
+        video.load();
+        video.play().catch(() => {
+          alert("Unable to play this video format.");
+        });
       }
     }
 
@@ -345,7 +360,6 @@
       }
     }
 
-    // Optional: Hide search on TVs (detect by userAgent)
     if (navigator.userAgent.includes("TV")) {
       document.getElementById("searchBar").style.display = "none";
     }
