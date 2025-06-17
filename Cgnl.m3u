@@ -1,4 +1,11 @@
 #EXTM3U
+
+#EXTINF:-1 tvg-id="" tvg-name="" group-title="🏀 NBA LEAGUE PASS" tvg-logo="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8P3joEa5YrAYgs-W8KNl81HP2DHf-p0zSisFeWwV6W4pnkp8mfiwwF9I&s=10",NBA - GAME 5-Indiana Pacers vs Oklahoma City Thunder 8:30am
+#EXTVLCOPT:http-origin=https://ppvs.su
+#EXTVLCOPT:http-referrer=https://ppvs.su/
+#EXTVLCOPT:http-user-agent=Mozilla/5.0 (X11; Linux x86_64; rv:139.0) Gecko/20100101 Firefox/139.0
+http://xtream-ie.org:80/live/HONORTV/Wrgrwgwrgfsh/5521.m3u8?token=93796396498892764664837862800888
+
 #EXTINF:-1 tvg-id="a2z.id" tvg-name="A2Z" tvg-logo="https://example.com/logo.png" group-title="Philippines",A2Z
 #KODIPROP:inputstream.adaptive.license_key=f703e4c8ec9041eeb5028ab4248fa094:c22f2162e176eee6273a5d0b68d19530
 https://qp-pldt-live-grp-02-prod.akamaized.net/out/u/cg_a2z.mpd
