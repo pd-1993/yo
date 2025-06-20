@@ -1,1 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Drama Kwento Tagalog</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    body {
+      background-color: #1a1a1a;
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
 
+    h1 {
+      color: #ff7f00;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background-color: #2a2a2a;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(255, 127, 0, 0.3);
+      max-width: 1000px;
+      width: 100%;
+      margin-bottom: 30px;
+    }
+
+    .channel-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      width: 100%;
+    }
+
+    .channel-box {
+      background-color: #1e1e1e;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(255, 127, 0, 0.2);
+      transition: transform 0.2s ease;
+      outline: none;
+    }
+
+    .channel-box:focus, .channel-box:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 15px rgba(255, 127, 0, 0.4);
+    }
+
+    .channel-box img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
+
+    .channel-box h3 {
+      font-size: 1em;
+      margin: 10px 0;
+      color: #ffffff;
+    }
+
+    .channel-box button {
+      background-color: #ff7f00;
+      border: none;
+      padding: 8px 12px;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 5px;
+    }
+
+    .channel-box button:hover {
+      background-color: #e86c00;
+    }
+
+    #searchBar {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1em;
+      background-color: #1e1e1e;
+      color: #fff;
+    }
+
+    #m3uUrl {
+      display: none;
+    }
+
+    #videoContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    #videoPlayer {
+      width: 90vw;
+      height: auto;
+      max-height: 90vh;
+      aspect-ratio: 16 / 9;
+      border: 3px solid #ff7f00;
+      border-radius: 12px;
+      box-shadow: 0 0 25px rgba(255, 127, 0, 0.5);
+    }
+
+    #closeBtn {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      background: #ff7f00;
+      color: white;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      z-index: 1000;
+    }
+
+    #closeBtn:hover {
+      background: #e86c00;
+    }
+
+    @media (max-width: 600px) {
+      .channel-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 400px) {
+      .channel-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 300px) {
+      .channel-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Drama Kwento Tagalog</h1>
+
+  <div class="card">
+    <input type="text" id="m3uUrl" value="https://opop.pro/D54gXhfXBNesXd" />
+    <input type="text" id="searchBar" placeholder="🔍 Search..." />
+    <div id="channelList" class="channel-grid"></div>
+  </div>
+
+  <div id="videoContainer">
+    <button id="closeBtn" onclick="closeVideo()">Close</button>
+    <video id="videoPlayer" controls autoplay muted playsinline></video>
+  </div>
+
+  <script>
+    let hls;
+    let allChannels = [];
+
+    async function loadM3U() {
+      const url = document.getElementById("m3uUrl").value;
+      const listContainer = document.getElementById("channelList");
+      listContainer.innerHTML = '<p style="color:gray">Loading channels...</p>';
+
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const lines = text.split(/\r?\n/);
+
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].startsWith("#EXTINF")) {
+            const titleMatch = lines[i].match(/,(.*)/);
+            const title = titleMatch ? titleMatch[1].trim() : "Unnamed Channel";
+            const logoMatch = lines[i].match(/tvg-logo="(.*?)"/);
+            const logo = logoMatch ? logoMatch[1] : "";
+            const streamUrl = lines[i + 1]?.trim();
+
+            if (streamUrl && streamUrl.startsWith("http")) {
+              allChannels.push({ title, streamUrl, logo });
+            }
+          }
+        }
+
+        if (allChannels.length === 0) {
+          listContainer.innerHTML = '<p>No channels found</p>';
+          return;
+        }
+
+        renderChannels(allChannels);
+      } catch (err) {
+        console.error(err);
+        listContainer.innerHTML = '<p style="color:red;">Failed to load playlist.</p>';
+      }
+    }
+
+    function renderChannels(channels) {
+      const listContainer = document.getElementById("channelList");
+      listContainer.innerHTML = "";
+
+      channels.forEach((ch) => {
+        const box = document.createElement("div");
+        box.className = "channel-box";
+        box.tabIndex = 0;
+
+        if (ch.logo) {
+          const img = document.createElement("img");
+          img.src = ch.logo;
+          img.alt = ch.title;
+          box.appendChild(img);
+        }
+
+        const title = document.createElement("h3");
+        title.textContent = ch.title;
+        box.appendChild(title);
+
+        const btn = document.createElement("button");
+        btn.textContent = "Play server 1";
+        btn.onclick = () => playChannel(ch.streamUrl);
+        box.appendChild(btn);
+
+        const extBtn = document.createElement("button");
+        extBtn.textContent = "Play server 2";
+        extBtn.onclick = () => {
+          window.location.href = ch.streamUrl;
+        };
+        box.appendChild(extBtn);
+
+        listContainer.appendChild(box);
+      });
+    }
+
+    function playChannel(streamUrl) {
+      const videoContainer = document.getElementById("videoContainer");
+      const video = document.getElementById("videoPlayer");
+
+      videoContainer.style.display = "flex";
+
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
+
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+
+      if (streamUrl.endsWith(".mp4")) {
+        video.src = streamUrl;
+        video.load();
+        video.play();
+        return;
+      }
+
+      if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = streamUrl;
+        video.addEventListener("loadedmetadata", () => {
+          video.play();
+        });
+      } else if (Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(streamUrl);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          video.play();
+        });
+      } else {
+        alert("This video format is not supported on your device.");
+      }
+    }
+
+    function closeVideo() {
+      const video = document.getElementById("videoPlayer");
+      const videoContainer = document.getElementById("videoContainer");
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+      videoContainer.style.display = "none";
+    }
+
+    document.getElementById("searchBar").addEventListener("input", function () {
+      const query = this.value.toLowerCase();
+      const filtered = allChannels.filter(ch => ch.title.toLowerCase().includes(query));
+      renderChannels(filtered);
+    });
+
+    window.onload = function () {
+      loadM3U();
+    };
+  </script>
+
+</body>
+</html>
