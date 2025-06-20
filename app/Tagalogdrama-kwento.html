@@ -230,12 +230,12 @@
         box.appendChild(title);
 
         const btn = document.createElement("button");
-        btn.textContent = "Play";
+        btn.textContent = "Play server 1";
         btn.onclick = () => playChannel(ch.streamUrl);
         box.appendChild(btn);
 
         const extBtn = document.createElement("button");
-        extBtn.textContent = "Open Externally";
+        extBtn.textContent = "Play server 2";
         extBtn.onclick = () => {
           window.location.href = ch.streamUrl;
         };
