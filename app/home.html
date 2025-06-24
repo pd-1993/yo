@@ -28,56 +28,54 @@
     header h1 {
       font-size: 24px;
       margin: 0;
-      color: #00aaff; /* Blue title */
+      color: #00aaff;
     }
 
     .container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 15px;
       padding: 20px;
       height: calc(100vh - 90px);
       overflow-y: auto;
     }
 
     .category {
-      background-color: #333;
-      padding: 20px;
-      border-radius: 12px;
+      background-color: #222;
+      padding: 10px;
+      border-radius: 10px;
       text-align: center;
       transition: transform 0.2s, background-color 0.2s;
-      outline: none;
-      aspect-ratio: 1 / 1; /* Square */
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      aspect-ratio: 1 / 1;
     }
 
-    .category:focus {
-      background-color: #555;
+    .category:hover, .category:focus {
+      background-color: #444;
       transform: scale(1.05);
     }
 
     .category img {
-      width: 50px;
-      height: 50px;
+      width: 60px;
+      height: 60px;
       margin-bottom: 10px;
       object-fit: contain;
     }
 
     .category a {
-      color: #fff;
+      color: #ffd369;
       text-decoration: none;
     }
 
     .category h2 {
-      font-size: 18px;
+      font-size: 16px;
       margin: 0;
-      color: #00aaff; /* Blue category text */
+      color: #ffd369;
     }
 
-    /* Hide scrollbar for TV feel */
     .container::-webkit-scrollbar {
       display: none;
     }
@@ -95,48 +93,29 @@
   </header>
 
   <main class="container">
-
-  <div class="category" tabindex="0">
-      <a href="/app/ptry">
-        <img src="https://i.imgur.com/PdkyoLx.jpeg" alt="PHILIPPINES CHANNEL">
-        <h2>PHILIPPINES CHANNEL</h2>
-      </a>
-    </div>
-    
-  <div class="category" tabindex="0">
-      <a href="/app/ast">
-        <img src="https://i.imgur.com/OMMreet.png" alt="ASTRO CHANNEL">
-        <h2>ASTRO CHANNEL</h2>
-      </a>
-    </div>
-    
-  <div class="category" tabindex="0">
-      <a href="/app/ple">
-        <img src="https://i.imgur.com/VCUEhXD.jpeg" alt="PLEX TV">
-        <h2>PLEX TV</h2>
-      </a>
-    </div>
-    
-  <div class="category" tabindex="0">
-      <a href="/app/ple">
-        <img src="https://i.imgur.com/X0hb6hJ.jpeg" alt="DISTRO TV">
-        <h2>DISTRO TV</h2>
-      </a>
-    </div>
-    
+    <!-- Example of a category -->
     <div class="category" tabindex="0">
-      <a href="/app/hmtdflix">
-        <img src="https://i.imgur.com/Q5mztTr.jpeg" alt="Tagalog Logo">
-        <h2>HMTDFLIX TAGALOG DUBBED</h2>
+      <a href="/app/justforlaughs">
+        <img src="https://i.imgur.com/x6rZ7Kc.png" alt="Just for Laughs Gags">
+        <h2>Just for laughs gags</h2>
       </a>
     </div>
 
     <div class="category" tabindex="0">
-      <a href="/app/international">
-        <img src="https://i.imgur.com/c2Jo4g5.jpeg" alt="Movies Collection">
-        <h2>Movies Collection</h2>
+      <a href="/app/cops">
+        <img src="https://i.imgur.com/VRt0jZC.png" alt="Cops">
+        <h2>Cops</h2>
       </a>
     </div>
+
+    <div class="category" tabindex="0">
+      <a href="/app/jail">
+        <img src="https://i.imgur.com/wm9ehBd.png" alt="Jail">
+        <h2>Jail</h2>
+      </a>
+    </div>
+
+    <!-- Add more items as needed -->
   </main>
 </body>
 </html>
