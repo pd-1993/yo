@@ -38,7 +38,7 @@
       box-shadow: 0 0 20px rgba(30, 144, 255, 0.1);
     }
 
-    #searchBar {
+    #categoryFilter, #searchBar {
       width: 100%;
       padding: 14px;
       margin-bottom: 20px;
@@ -136,6 +136,11 @@
   <h1>PHILIPPINES</h1>
 
   <div class="card">
+    <select id="categoryFilter">
+      <option value="all">📺 All Categories</option>
+      <option value="PHILIPPINES CHANNEL">🇵🇭 Philippines Channel</option>
+      <option value="ASTRO CHANNEL">🌟 Astro Channel</option>
+    </select>
     <input type="text" id="searchBar" placeholder="🔍 Search channels..." />
     <div id="channelList" class="channel-grid"></div>
   </div>
@@ -1056,7 +1061,7 @@
         manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/2605/default_ott.mpd',
         clearKey: { '6093e12639b24cd651ee6b3c13446d10': 'f8326f668c7bee309e5302b513e5bdf7' },
         category: "ASTRO CHANNEL"
-      }      
+      }
     ];
 
     function renderChannels(channels) {
@@ -1198,6 +1203,23 @@
       if (boxes.length) boxes[0].focus();
     }
 
+    function applyFilters() {
+      const q = document.getElementById("searchBar").value.toLowerCase();
+      const category = document.getElementById("categoryFilter").value;
+
+      let filtered = allChannels.filter((ch) => ch.name.toLowerCase().includes(q));
+      if (category !== "all") {
+        filtered = filtered.filter((ch) => ch.category === category);
+      }
+
+      renderChannels(filtered);
+      focusIndex = 0;
+      focusFirstChannel();
+    }
+
+    document.getElementById("searchBar").addEventListener("input", applyFilters);
+    document.getElementById("categoryFilter").addEventListener("change", applyFilters);
+
     document.addEventListener("keydown", (e) => {
       const boxes = document.querySelectorAll(".channel-box");
       if (!boxes.length) return;
@@ -1224,14 +1246,6 @@
       }
 
       boxes[focusIndex]?.focus();
-    });
-
-    document.getElementById("searchBar").addEventListener("input", function () {
-      const q = this.value.toLowerCase();
-      const filtered = allChannels.filter((ch) => ch.name.toLowerCase().includes(q));
-      renderChannels(filtered);
-      focusIndex = 0;
-      focusFirstChannel();
     });
 
     window.onload = () => {
