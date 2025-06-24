@@ -2,156 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ASTRO</title>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.5.0/dist/shaka-player.compiled.min.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-    }
     body {
       margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background-color: #0c0f1a;
-      color: #cce6ff;
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 20px;
     }
-
-    h1 {
-      color: #1E90FF;
-      margin-bottom: 20px;
-      font-size: 2rem;
-      text-align: center;
-    }
-
-    .card {
-      background-color: #1a1f2e;
-      padding: 20px;
-      border-radius: 16px;
-      width: 100%;
-      max-width: 1000px;
-      box-shadow: 0 0 20px rgba(30, 144, 255, 0.1);
-    }
-
-    #searchBar {
-      width: 100%;
-      padding: 14px;
-      margin-bottom: 20px;
-      font-size: 1em;
-      background-color: #1e2433;
-      color: #cce6ff;
-      border: 1px solid #2c3e50;
-      border-radius: 10px;
-    }
-
+    h1 { color: #1E90FF; }
     .channel-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 16px;
+      gap: 20px;
+      width: 100%;
+      max-width: 900px;
     }
-
     .channel-box {
-      background-color: #212a3b;
-      padding: 12px;
+      background: #222;
+      padding: 10px;
       border-radius: 10px;
       text-align: center;
-      box-shadow: 0 0 12px rgba(30, 144, 255, 0.1);
-      transition: transform 0.2s ease, box-shadow 0.2s;
-      outline: none;
-    }
-
-    .channel-box:focus,
-    .channel-box:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 12px rgba(30, 144, 255, 0.4);
-    }
-
-    .channel-box img {
-      width: 90px;
-      height: 90px;
-      object-fit: contain;
-      margin-bottom: 10px;
-    }
-
-    .channel-box h3 {
-      font-size: 1em;
-      margin: 0 0 10px 0;
-      color: #99ccff;
-    }
-
-    #videoContainer {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 20, 0.95);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-    }
-
-    #videoPlayer {
-      width: 90vw;
-      max-height: 90vh;
-      border-radius: 14px;
-      border: none;
-      box-shadow: 0 0 25px rgba(30, 144, 255, 0.3);
-    }
-
-    #closeBtn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: #1E90FF;
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-size: 1em;
       cursor: pointer;
-      z-index: 1000;
-      transition: background 0.2s ease;
     }
-
-    #closeBtn:hover {
-      background: #187bcd;
-    }
-
-    @media (hover: none) {
-      .channel-box:hover {
-        transform: none;
-        box-shadow: none;
-      }
+    .channel-box:hover { background: #333; }
+    .channel-box img { width: 100px; }
+    video {
+      width: 90vw;
+      max-height: 80vh;
+      margin-top: 20px;
+      border: 2px solid #1E90FF;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
   <h1>ASTRO</h1>
-
-  <div class="card">
-    <input type="text" id="searchBar" placeholder="🔍 Search channels..." />
-    <div id="channelList" class="channel-grid"></div>
-  </div>
-
-  <div id="videoContainer">
-    <button id="closeBtn" onclick="closeVideo()">Close</button>
-    <video id="videoPlayer" controls autoplay playsinline></video>
-  </div>
+  <div class="channel-grid" id="channelList"></div>
+  <video id="videoPlayer" controls autoplay></video>
 
   <script>
-    let hls;
     let shakaPlayer;
-    let allChannels = [];
-    let focusIndex = 0;
 
     const staticChannels = [
+      {
       {
         name: 'ABC AUSTRALIA',
         logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS58uQYv5JcLQIiXycyDyMQMbbKnG__phTUpw&s',
@@ -379,186 +280,55 @@
       }
     ];
 
-    function renderChannels(channels) {
+    function renderChannels() {
       const container = document.getElementById("channelList");
-      container.innerHTML = "";
-
-      channels.forEach((ch, index) => {
+      staticChannels.forEach(channel => {
         const box = document.createElement("div");
         box.className = "channel-box";
-        box.tabIndex = 0;
-        box.setAttribute("data-index", index);
-        box.onclick = () => playChannel(ch);
-
-        if (ch.logo) {
-          const img = document.createElement("img");
-          img.src = ch.logo;
-          img.alt = ch.name;
-          box.appendChild(img);
-        }
-
-        const title = document.createElement("h3");
-        title.textContent = ch.name;
-        box.appendChild(title);
-
+        box.innerHTML = `<img src="${channel.logo}" alt="${channel.name}" /><div>${channel.name}</div>`;
+        box.onclick = () => playChannel(channel);
         container.appendChild(box);
       });
     }
 
     async function playChannel(channel) {
-      const container = document.getElementById("videoContainer");
       const video = document.getElementById("videoPlayer");
-
-      container.style.display = "flex";
       video.pause();
-
-      if (hls) {
-        hls.destroy();
-        hls = null;
-      }
 
       if (shakaPlayer) {
         await shakaPlayer.destroy();
         shakaPlayer = null;
       }
 
-      video.removeAttribute("src");
-      video.load();
+      shakaPlayer = new shaka.Player(video);
 
-      const src = channel.manifestUri || channel.url;
-
-      if (channel.type === "mpegdash" && src) {
-        if (!shaka.Player.isBrowserSupported()) {
-          alert("Shaka Player not supported.");
-          return;
+      // Add fake User-Agent header (not real one)
+      shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
+        if (type === shaka.net.NetworkingEngine.RequestType.MANIFEST) {
+          request.headers['X-Fake-User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
         }
+      });
 
-        shakaPlayer = new shaka.Player(video);
-
-        if (channel.clearKey) {
-          shakaPlayer.configure({
-            drm: {
-              clearKeys: channel.clearKey
-            }
-          });
-        }
-
-        try {
-          await shakaPlayer.load(src);
-          enterFullscreen(video);
-          video.play();
-        } catch (e) {
-          console.error("Shaka load error", e);
-          alert("Failed to play MPEG-DASH stream.");
-        }
-
-        return;
+      if (channel.clearKey) {
+        shakaPlayer.configure({ drm: { clearKeys: channel.clearKey } });
       }
 
-      if (src?.endsWith(".m3u8")) {
-        if (Hls.isSupported()) {
-          hls = new Hls();
-          hls.loadSource(src);
-          hls.attachMedia(video);
-          hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            enterFullscreen(video);
-            video.play();
-          });
-        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-          video.src = src;
-          video.addEventListener("loadedmetadata", () => {
-            enterFullscreen(video);
-            video.play();
-          });
-        } else {
-          alert("HLS not supported.");
-        }
-        return;
-      }
-
-      if (src?.endsWith(".mp4")) {
-        video.src = src;
-        video.load();
-        enterFullscreen(video);
+      try {
+        await shakaPlayer.load(channel.manifestUri);
         video.play();
-        return;
+      } catch (e) {
+        alert("Playback error: " + e);
+        console.error(e);
       }
-
-      alert("Unsupported stream format.");
     }
-
-    function enterFullscreen(elem) {
-      if (elem.requestFullscreen) elem.requestFullscreen();
-      else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-      else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
-    }
-
-    function closeVideo() {
-      const video = document.getElementById("videoPlayer");
-      document.getElementById("videoContainer").style.display = "none";
-      video.pause();
-      video.removeAttribute("src");
-      video.load();
-
-      if (shakaPlayer) {
-        shakaPlayer.destroy();
-        shakaPlayer = null;
-      }
-
-      if (hls) {
-        hls.destroy();
-        hls = null;
-      }
-
-      document.exitFullscreen?.();
-    }
-
-    function focusFirstChannel() {
-      const boxes = document.querySelectorAll(".channel-box");
-      if (boxes.length) boxes[0].focus();
-    }
-
-    document.addEventListener("keydown", (e) => {
-      const boxes = document.querySelectorAll(".channel-box");
-      if (!boxes.length) return;
-
-      const cols = Math.floor(document.getElementById("channelList").offsetWidth / 180);
-      const max = boxes.length - 1;
-
-      switch (e.key) {
-        case "ArrowRight":
-          focusIndex = Math.min(focusIndex + 1, max);
-          break;
-        case "ArrowLeft":
-          focusIndex = Math.max(focusIndex - 1, 0);
-          break;
-        case "ArrowDown":
-          focusIndex = Math.min(focusIndex + cols, max);
-          break;
-        case "ArrowUp":
-          focusIndex = Math.max(focusIndex - cols, 0);
-          break;
-        case "Enter":
-          boxes[focusIndex].click();
-          return;
-      }
-
-      boxes[focusIndex]?.focus();
-    });
-
-    document.getElementById("searchBar").addEventListener("input", function () {
-      const q = this.value.toLowerCase();
-      const filtered = allChannels.filter((ch) => ch.name.toLowerCase().includes(q));
-      renderChannels(filtered);
-      focusIndex = 0;
-      focusFirstChannel();
-    });
 
     window.onload = () => {
-      document.getElementById("videoPlayer").setAttribute("crossorigin", "anonymous");
-      allChannels = staticChannels;
-      renderChannels(allChannels);
-      focusFirstChannel();
+      shaka.polyfill.installAll();
+      if (!shaka.Player.isBrowserSupported()) {
+        alert("Shaka Player not supported in this browser.");
+        return;
+      }
+      renderChannels();
     };
   </script>
 </body>
