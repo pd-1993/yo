@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DISTRO TV</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #0f0f0f;
+      color: #e0ffe0;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      margin: 0;
+    }
+
+    h1 {
+      color: #00ff7f;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .card {
+      background-color: #1a1a1a;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0, 255, 127, 0.3);
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    #searchBar {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1em;
+      background-color: #1e1e1e;
+      color: #e0ffe0;
+    }
+
+    .channel-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 15px;
+    }
+
+    .channel-box {
+      background-color: #141414;
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0, 255, 127, 0.2);
+      transition: transform 0.2s ease;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .channel-box:focus,
+    .channel-box:hover {
+      box-shadow: 0 0 15px #00ff7f;
+      transform: scale(1.05);
+    }
+
+    .channel-box img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
+
+    .channel-box h3 {
+      font-size: 1em;
+      margin: 5px 0;
+    }
+
+    #videoContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    #videoPlayer {
+      width: 90vw;
+      max-height: 90vh;
+      border-radius: 12px;
+      border: none;
+    }
+
+    #closeBtn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #00cc66;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <h1>DISTRO TV</h1>
+
+  <div class="card">
+    <input type="text" id="searchBar" placeholder="🔍 Search..." />
+    <div id="channelList" class="channel-grid"></div>
+  </div>
+
+  <div id="videoContainer">
+    <button id="closeBtn" onclick="closeVideo()">Close</button>
+    <video id="videoPlayer" controls autoplay playsinline></video>
+  </div>
+
+  <script>
+    let hls;
+    let allChannels = [];
+    let focusIndex = 0;
+
+    const m3uUrl = "https://m3u.work/BiDC9v";
+
+    async function loadM3U() {
+      const res = await fetch(m3uUrl);
+      const text = await res.text();
+      const lines = text.split(/\r?\n/);
+
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith("#EXTINF")) {
+          const title = lines[i].split(",")[1]?.trim() || "Unnamed Channel";
+          const logoMatch = lines[i].match(/tvg-logo="(.*?)"/);
+          const logo = logoMatch ? logoMatch[1] : "";
+          const url = lines[i + 1]?.trim();
+
+          if (url && url.startsWith("http")) {
+            allChannels.push({ title, logo, url });
+          }
+        }
+      }
+
+      renderChannels(allChannels);
+      focusFirstChannel();
+    }
+
+    function renderChannels(channels) {
+      const container = document.getElementById("channelList");
+      container.innerHTML = "";
+
+      channels.forEach((ch, index) => {
+        const box = document.createElement("div");
+        box.className = "channel-box";
+        box.tabIndex = 0;
+        box.setAttribute("data-index", index);
+        box.onclick = () => playChannel(ch.url);
+
+        if (ch.logo) {
+          const img = document.createElement("img");
+          img.src = ch.logo;
+          img.alt = ch.title;
+          box.appendChild(img);
+        }
+
+        const title = document.createElement("h3");
+        title.textContent = ch.title;
+        box.appendChild(title);
+
+        container.appendChild(box);
+      });
+    }
+
+    function playChannel(url) {
+      const container = document.getElementById("videoContainer");
+      const video = document.getElementById("videoPlayer");
+
+      container.style.display = "flex";
+
+      if (hls) {
+        hls.destroy();
+      }
+
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+
+      if (url.endsWith(".mp4")) {
+        video.src = url;
+        video.load();
+        enterFullscreen(video);
+        video.play();
+        return;
+      }
+
+      if (Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          enterFullscreen(video);
+          video.play();
+        });
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = url;
+        video.addEventListener("loadedmetadata", () => {
+          enterFullscreen(video);
+          video.play();
+        });
+      } else {
+        alert("This stream format is not supported.");
+      }
+    }
+
+    function enterFullscreen(elem) {
+      if (elem.requestFullscreen) elem.requestFullscreen();
+      else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+      else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+    }
+
+    function closeVideo() {
+      const video = document.getElementById("videoPlayer");
+      document.getElementById("videoContainer").style.display = "none";
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+      document.exitFullscreen?.();
+    }
+
+    function focusFirstChannel() {
+      const boxes = document.querySelectorAll(".channel-box");
+      if (boxes.length) boxes[0].focus();
+    }
+
+    document.addEventListener("keydown", (e) => {
+      const boxes = document.querySelectorAll(".channel-box");
+      if (!boxes.length) return;
+
+      const cols = Math.floor(document.getElementById("channelList").offsetWidth / 180);
+      const max = boxes.length - 1;
+
+      switch (e.key) {
+        case "ArrowRight":
+          focusIndex = Math.min(focusIndex + 1, max);
+          break;
+        case "ArrowLeft":
+          focusIndex = Math.max(focusIndex - 1, 0);
+          break;
+        case "ArrowDown":
+          focusIndex = Math.min(focusIndex + cols, max);
+          break;
+        case "ArrowUp":
+          focusIndex = Math.max(focusIndex - cols, 0);
+          break;
+        case "Enter":
+          boxes[focusIndex].click();
+          return;
+      }
+
+      boxes[focusIndex]?.focus();
+    });
+
+    document.getElementById("searchBar").addEventListener("input", function () {
+      const q = this.value.toLowerCase();
+      const filtered = allChannels.filter((ch) => ch.title.toLowerCase().includes(q));
+      renderChannels(filtered);
+      focusIndex = 0;
+      focusFirstChannel();
+    });
+
+    window.onload = loadM3U;
+  </script>
+</body>
+</html>
