@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASTRO</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.5.0/dist/shaka-player.compiled.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background-color: #0c0f1a;
+      color: #cce6ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #1E90FF;
+      margin-bottom: 20px;
+      font-size: 2rem;
+      text-align: center;
+    }
+
+    .card {
+      background-color: #1a1f2e;
+      padding: 20px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 1000px;
+      box-shadow: 0 0 20px rgba(30, 144, 255, 0.1);
+    }
+
+    #searchBar {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 20px;
+      font-size: 1em;
+      background-color: #1e2433;
+      color: #cce6ff;
+      border: 1px solid #2c3e50;
+      border-radius: 10px;
+    }
+
+    .channel-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+    }
+
+    .channel-box {
+      background-color: #212a3b;
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 0 12px rgba(30, 144, 255, 0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s;
+      outline: none;
+    }
+
+    .channel-box:focus,
+    .channel-box:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 12px rgba(30, 144, 255, 0.4);
+    }
+
+    .channel-box img {
+      width: 90px;
+      height: 90px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
+
+    .channel-box h3 {
+      font-size: 1em;
+      margin: 0 0 10px 0;
+      color: #99ccff;
+    }
+
+    #videoContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 20, 0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    #videoPlayer {
+      width: 90vw;
+      max-height: 90vh;
+      border-radius: 14px;
+      border: none;
+      box-shadow: 0 0 25px rgba(30, 144, 255, 0.3);
+    }
+
+    #closeBtn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #1E90FF;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      z-index: 1000;
+      transition: background 0.2s ease;
+    }
+
+    #closeBtn:hover {
+      background: #187bcd;
+    }
+
+    @media (hover: none) {
+      .channel-box:hover {
+        transform: none;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>ASTRO</h1>
+
+  <div class="card">
+    <input type="text" id="searchBar" placeholder="🔍 Search channels..." />
+    <div id="channelList" class="channel-grid"></div>
+  </div>
+
+  <div id="videoContainer">
+    <button id="closeBtn" onclick="closeVideo()">Close</button>
+    <video id="videoPlayer" controls autoplay playsinline></video>
+  </div>
+
+  <script>
+    let hls;
+    let shakaPlayer;
+    let allChannels = [];
+    let focusIndex = 0;
+
+    const staticChannels = [
+      {
+        name: 'ABC AUSTRALIA',
+        logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS58uQYv5JcLQIiXycyDyMQMbbKnG__phTUpw&s',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/5075/default_ott.mpd',
+        clearKey: { '6a9fcc2f94258cee0f2108687c42e710': '99bd7c1ff2391244b4e40e08bef1109d' },
+        category: "ASTRO"
+      },
+      {
+        name: 'ADITHIYA',
+        logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSuPbXUgOWMnDWbBwUEUVG3Tk7qK7ld_xpn6-c42P1PcvnGv8pBfrqH9MDN&s=10',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/915/default_ott.mpd',
+        clearKey: { '859f5b2054c4073e8f0da463d208b910': '5eb3762b1a4631a0b98e25e23cef0193' },
+        category: "ASTRO"
+      },
+      {
+        name: 'AI FM',
+        logo: 'https://rtmklik.rtm.gov.my/img/radio-ai.028c2b41.jpg',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/140/default_ott.mpd',
+        clearKey: { '99d0060f4d3333be90b0cae6addb4310': '2f61d66cfce12bcb056571510999f3bf' },
+        category: "ASTRO"
+      },
+      {
+        name: 'AL HIJRAH',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/8/8e/TV_Alhijrah_%282013%29.svg',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/1113/default_ott.mpd',
+        clearKey: { '41a42fb5af457501c11bb9b158d5a110': '57a8d6f9e3832887db18ea6071118736' },
+        category: "ASTRO"
+      },
+            {
+        name: 'AL JAZEERA',
+        logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRT1rXt5EmrzZUskc9wI2RSPkc3NVZBry8LKQ&s',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/2110/default_ott.mpd',
+        clearKey: { 'b1fbd0874e7923f5b05929a042aa0610': '6c3c498113abffdf454dc935319a794d' },
+        category: "ASTRO"
+      },
+      {
+        name: 'ANIMAL PLANET',
+        logo: 'https://standfirst-designweek-production.imgix.net/uploads/2018/10/25115647/AnimalPlanet_Vertical_OneLineLarge_RGB-002.jpg?fit=crop&crop=faces&q=80&auto=compress,format&w=395&h=439&dpr=2.625',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/2710/default_ott.mpd',
+        clearKey: { 'd5199f1513a0286e038dae8f7d820010': '4d4d4d9dc41be43f528a4940cf66f14c' },
+        category: "ASTRO"
+      },
+      {
+        name: 'ASIAN FOOD NETWORK',
+        logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4RTwn6STZQ8dUiCkUNgk5c01RxVhlOqD7meS1yZhtHmrEXvgFPQB2nhE&s=10',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/500/default_ott.mpd',
+        clearKey: { '346b9f41e2933748c8861f82932e0110': 'cf0cffb637b81598a27bd6b0d90d65a8' },
+        category: "ASTRO"
+      },
+             {
+        name: 'ASTRO ARENA',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Astro_Arena_1_%282024%29.png/960px-Astro_Arena_1_%282024%29.png',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/2604/default_ott.mpd',
+        clearKey: { 'efda647dad723563b625be8c05ee6110': '6776985938b332164b97b81fe566a34a' },
+        category: "ASTRO"
+      },
+                   {
+        name: 'ASTRO ARENA 2',
+        logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQgwKKDq9ZBHtIGQFuNYgMgW-4bG0vbMlyP1A&s',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/5057/default_ott.mpd',
+        clearKey: { 'ead0335d60401225727a6d531e9c2710': '1ee3b252227c5c2ec9378c833d2e14ff' },
+        category: "ASTRO"
+      },
+                     {
+        name: 'ASTRO AURA',
+        logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLDPvK5YquK8tSxXKmKq5VviNsOerQAu0wYQ&s',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/609/default_ott.mpd',
+        clearKey: { '869c3237d2fae78301a91dbb5a924d10': 'f5c2312185f9f0c4894b73ce17419d8c' },
+        category: "ASTRO"
+      },
+      {
+        name: 'ASTRO AWANI',
+        logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRKGjO2-bOhX3Vnwlb3AfQEEb8NSQefcJrkRg&s',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/5025/default_ott.mpd',
+        clearKey: { '6f06f3b3cf7cbad0cc8b21e2c94dfb10': '525510cfa634bd630af8c95fa93576ca' },
+        category: "ASTRO"
+      },
+  {
+        name: 'ASTRO BADMINTON',
+        logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTWtWlf1t4Ir2yrtUF8M7AjCZ8updFKhaqNw&s',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/5170/default_ott.mpd',
+        clearKey: { '6ff0e040d544ec3f02243865990f0c10': '83728b47019abdbb37aa36ed5f2951bd' },
+        category: "ASTRO"
+      },
+{
+        name: 'ASTRO CERIA',
+        logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQVunJ9hr1FiomwAiG2WJ9w5e5Bt-NacsFF0Q&s',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/2606/default_ott.mpd',
+        clearKey: { 'b6e60ca0d28e8f97395f07b4e2e53a10': '0f0ea6c3543c29d7f513eb886eb74f88' },
+        category: "ASTRO"
+      },
+                   {
+        name: 'ASTRO CRICKET',
+        logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdXvbo6EtpHQ-Saub62iGoiEgSmDNFe_rniQ&s',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/2504/default_ott.mpd',
+        clearKey: { '03c2e0af2f8159f9f0ce9b5dbc865f10': 'cd84ed136b0cc71f8ab8cd4d4f6a2e4c' },
+        category: "ASTRO"
+      },
+{
+        name: 'ASTRO FOOTBALL',
+        logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6Jk9QNq3vxTwghzf3MzL18JG0cV0ktsUcKQ&s',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/2506/default_ott.mpd',
+        clearKey: { '79f4028730acca9ab8b00f26158ddb10': '91febe843c08c7cc523efd827292e40e' },
+        category: "ASTRO"
+      },
+                         {
+        name: 'ASTRO OASIS',
+        logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6Jk9QNq3vxTwghzf3MzL18JG0cV0ktsUcKQ&s',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/2505/default_ott.mpd',
+        clearKey: { '17d5d62dc61954b82ee016da264abd10': '5f35f815699140e2649d825f0d24028e' },
+        category: "ASTRO"
+      },
+  {
+        name: 'ASTRO PREMIER',
+        logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSy1FykAG-rZW1xQImlOVuSQIhxWOYsGVRr-w&s',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/5128/default_ott.mpd',
+        clearKey: { '2f3238142348789ed5a99b9a1bd8e010': '438fb62e97278526686d921126343d32' },
+        category: "ASTRO"
+      },
+{
+        name: 'ASTRO RANIA',
+        logo: 'https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcSaJFgLGSARm0DMqhle2Ey2StZNFcyNvVcRuLGyTMLVPJnBfNMJHp4OZEduoUYsUNG4etExuZ3EmqusR5kpIiYWo2RBinMD3wZrMEHI_UU',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/608/default_ott.mpd',
+        clearKey: { '784c6037e5888e84106e41059fe2b110': '8e4200bf5c4d523ff00bfd173d021602' },
+        category: "ASTRO"
+      },
+{
+        name: 'HBO',
+        logo: 'https://i.imgur.com/fHBIgs6.png',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/2304/default_ott.mpd',
+        clearKey: { 'a098896d2b11c5f3906a993c3ba5c610': 'f3f842c54cc96cbbd0bcb96a4cb8a813' },
+        category: "ASTRO"
+      },
+      {
+        name: 'HBO Hits',
+        logo: 'https://i.imgur.com/iCnfJS0.png',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/5053/default_ott.mpd',
+        clearKey: { '5d600eb70944d681c26c1f48fbe61f10': '796139ba05a2ab425f978c7fd98b4372' },
+        category: "ASTRO"
+      },
+{
+        name: 'HBO Family',
+        logo: 'https://i.imgur.com/WANpEkc.png',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/5053/default_ott.mpd',
+        clearKey: { '2b9ff7cc1a3dc9fef47cc5773472d510': '7e37588e893ab9252e505bd6dda35beb' },
+        category: "ASTRO"
+      },
+      {
+        name: 'HITS MOVIES',
+        logo: 'https://i.imgur.com/zzdj40q.png',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/2305/default_ott.mpd',
+        clearKey: { 'ff1febd7018d0dd711601e795e0d6210': '38fbfb3a56e40ff92c9df8acbcba9ef6' },
+        category: "ASTRO"
+
+      },
+{
+        name: 'Cinemax',
+        logo: 'https://i.imgur.com/r8qzNiy.png',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/603/default_ott.mpd',
+        clearKey: { 'efdb2a8d39151cc39f4b51d762cf9c10': '13cc535ad4a73201147863cac386cdd3' },
+        category: "ASTRO"
+      },
+{
+        name: 'Hits Now',
+        logo: 'https://i.imgur.com/S3pNx8G.png',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/5110/default_ott.mpd',
+        clearKey: { '4307def6a29bec082f8c93f1f98e5910': 'a4d49bda8cd29ba2888c732b4e7d9d63' },
+        category: "Educational and Documentary"
+      },
+        {
+        name: 'Hits',
+        logo: 'https://i.imgur.com/jghDgUJ.png',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/606/default_ott.mpd',
+        clearKey: { '1fe92685a75844dc54c9dac124802510': '36cb2063bf5338d18d31657371b15817' },
+        category: "ASTRO"
+      },
+{
+        name: 'Hits Movies',
+        logo: 'https://i.imgur.com/zzdj40q.png',
+        type: 'mpegdash',
+        manifestUri: 'https://qp-pldt-live-grp-12-prod.akamaized.net/out/u/dr_hitsmovies.mpd',
+        clearKey: { 'f56b57b32d7e4b2cb21748c0b56761a7': '3df06a89aa01b32655a77d93e09e266f' },
+        category: "ASTRO"
+      },
+{
+        name: 'AXN',
+        logo: 'https://i.imgur.com/Dj6tVaG.png',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/2303/default_ott.mpd',
+        clearKey: { 'c24a7811d9ab46b48b746a0e7e269210': 'c321afe1689b07d5b7e55bd025c483ce' },
+        category: "ASTRO"
+      },
+      {
+        name: 'Warner TV',
+        logo: 'https://i.imgur.com/vGEL2Ne.png',
+        type: 'mpegdash',
+        manifestUri: 'https://linearjitp-playback.astro.com.my/dash-wv/linear/2605/default_ott.mpd',
+        clearKey: { '6093e12639b24cd651ee6b3c13446d10': 'f8326f668c7bee309e5302b513e5bdf7' },
+        category: "ASTRO"
+      }
+    ];
+
+    function renderChannels(channels) {
+      const container = document.getElementById("channelList");
+      container.innerHTML = "";
+
+      channels.forEach((ch, index) => {
+        const box = document.createElement("div");
+        box.className = "channel-box";
+        box.tabIndex = 0;
+        box.setAttribute("data-index", index);
+        box.onclick = () => playChannel(ch);
+
+        if (ch.logo) {
+          const img = document.createElement("img");
+          img.src = ch.logo;
+          img.alt = ch.name;
+          box.appendChild(img);
+        }
+
+        const title = document.createElement("h3");
+        title.textContent = ch.name;
+        box.appendChild(title);
+
+        container.appendChild(box);
+      });
+    }
+
+    async function playChannel(channel) {
+      const container = document.getElementById("videoContainer");
+      const video = document.getElementById("videoPlayer");
+
+      container.style.display = "flex";
+      video.pause();
+
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
+
+      if (shakaPlayer) {
+        await shakaPlayer.destroy();
+        shakaPlayer = null;
+      }
+
+      video.removeAttribute("src");
+      video.load();
+
+      const src = channel.manifestUri || channel.url;
+
+      if (channel.type === "mpegdash" && src) {
+        if (!shaka.Player.isBrowserSupported()) {
+          alert("Shaka Player not supported.");
+          return;
+        }
+
+        shakaPlayer = new shaka.Player(video);
+
+        if (channel.clearKey) {
+          shakaPlayer.configure({
+            drm: {
+              clearKeys: channel.clearKey
+            }
+          });
+        }
+
+        try {
+          await shakaPlayer.load(src);
+          enterFullscreen(video);
+          video.play();
+        } catch (e) {
+          console.error("Shaka load error", e);
+          alert("Failed to play MPEG-DASH stream.");
+        }
+
+        return;
+      }
+
+      if (src?.endsWith(".m3u8")) {
+        if (Hls.isSupported()) {
+          hls = new Hls();
+          hls.loadSource(src);
+          hls.attachMedia(video);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            enterFullscreen(video);
+            video.play();
+          });
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = src;
+          video.addEventListener("loadedmetadata", () => {
+            enterFullscreen(video);
+            video.play();
+          });
+        } else {
+          alert("HLS not supported.");
+        }
+        return;
+      }
+
+      if (src?.endsWith(".mp4")) {
+        video.src = src;
+        video.load();
+        enterFullscreen(video);
+        video.play();
+        return;
+      }
+
+      alert("Unsupported stream format.");
+    }
+
+    function enterFullscreen(elem) {
+      if (elem.requestFullscreen) elem.requestFullscreen();
+      else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+      else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+    }
+
+    function closeVideo() {
+      const video = document.getElementById("videoPlayer");
+      document.getElementById("videoContainer").style.display = "none";
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+
+      if (shakaPlayer) {
+        shakaPlayer.destroy();
+        shakaPlayer = null;
+      }
+
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
+
+      document.exitFullscreen?.();
+    }
+
+    function focusFirstChannel() {
+      const boxes = document.querySelectorAll(".channel-box");
+      if (boxes.length) boxes[0].focus();
+    }
+
+    document.addEventListener("keydown", (e) => {
+      const boxes = document.querySelectorAll(".channel-box");
+      if (!boxes.length) return;
+
+      const cols = Math.floor(document.getElementById("channelList").offsetWidth / 180);
+      const max = boxes.length - 1;
+
+      switch (e.key) {
+        case "ArrowRight":
+          focusIndex = Math.min(focusIndex + 1, max);
+          break;
+        case "ArrowLeft":
+          focusIndex = Math.max(focusIndex - 1, 0);
+          break;
+        case "ArrowDown":
+          focusIndex = Math.min(focusIndex + cols, max);
+          break;
+        case "ArrowUp":
+          focusIndex = Math.max(focusIndex - cols, 0);
+          break;
+        case "Enter":
+          boxes[focusIndex].click();
+          return;
+      }
+
+      boxes[focusIndex]?.focus();
+    });
+
+    document.getElementById("searchBar").addEventListener("input", function () {
+      const q = this.value.toLowerCase();
+      const filtered = allChannels.filter((ch) => ch.name.toLowerCase().includes(q));
+      renderChannels(filtered);
+      focusIndex = 0;
+      focusFirstChannel();
+    });
+
+    window.onload = () => {
+      document.getElementById("videoPlayer").setAttribute("crossorigin", "anonymous");
+      allChannels = staticChannels;
+      renderChannels(allChannels);
+      focusFirstChannel();
+    };
+  </script>
+</body>
+</html>
