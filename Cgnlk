@@ -1,4 +1,13 @@
 #EXTM3U
+
+#EXTINF:0 CUID="1" tvg-name="01. TV5" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/TV5_%28Philippines%29_logo.svg/2048px-TV5_%28Philippines%29_logo.svg.png" group-title="🇵🇭 PHILIPPINES CHANNEL",V5
+#KODIPROP:inputstreamaddon=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=dash
+#KODIPROP:inputstream.adaptive.license_type=org.w3.clearkey
+#KODIPROP:inputstream.adaptive.license_key=495190c43d0f46778909f1c2617bd74b:f55e177895166ef23b69de50b0bdebd7
+https://www.paramountplus.com/live-tv/stream/big-brother-live-feeds/cCo69EHARCvG4KnQhX39sZuSKlkkXrTp/
+https://gamesg041-resid0703.global.ssl.fastly.net/out/v1/8693ea8fd95641dbbf95ab85dfc16fe0/manifest.mpd?CMCD=ot%3Dm%2Csf%3Dd%2Csid%3D%22e94e93e2-70f3-46ca-8657-ddc2b7733c1f%22%2Csu
+
 #EXTINF:0 CUID="1" tvg-name="01. TV5" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/TV5_%28Philippines%29_logo.svg/2048px-TV5_%28Philippines%29_logo.svg.png" group-title="🇵🇭 PHILIPPINES CHANNEL",TV5
 #KODIPROP:inputstreamaddon=inputstream.adaptive
 #KODIPROP:inputstream.adaptive.manifest_type=dash
